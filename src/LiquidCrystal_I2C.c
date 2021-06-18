@@ -29,11 +29,12 @@
     Constructor. Initializes the class variables, defines I2C address,
     LCD & PCF8574 pins.
 */
-/**************************************************************************/  
-LiquidCrystal_I2C(PCF8574_address addr, uint8_t P0, uint8_t P1, uint8_t P2, uint8_t P3, uint8_t P4, uint8_t P5, uint8_t P6, uint8_t P7, backlightPolarity polarity)
-{
-  uint8_t PCF8574_TO_LCD[8] = {P0, P1, P2, P3, P4, P5, P6, P7}; //PCF8574 ports to LCD pins mapping array
+/**************************************************************************/
 
+const uint8_t LCDpinMapping[8] = {4, 5, 6, 16, 11, 12, 13, 14}
+
+LiquidCrystal_I2C(PCF8574_address addr, uint8_t* pinMapping, backlightPolarity polarity)
+{
   _PCF8574_address        = addr;
   _PCF8574_initialisation = true;
   _backlightPolarity      = polarity;
@@ -41,7 +42,7 @@ LiquidCrystal_I2C(PCF8574_address addr, uint8_t P0, uint8_t P1, uint8_t P2, uint
   /* maping LCD pins to PCF8574 ports */
   for (uint8_t i = 0; i < 8; i++)
   {
-    switch(PCF8574_TO_LCD[i])
+    switch(*pinMapping)
     {
       case 4:                   //RS pin
         _LCD_TO_PCF8574[7] = i;
@@ -78,6 +79,7 @@ LiquidCrystal_I2C(PCF8574_address addr, uint8_t P0, uint8_t P1, uint8_t P2, uint
       default:
         _PCF8574_initialisation = false; //safety check, make sure the declaration of lcd pins is right
         break;
+      pinMapping++;
     }
   }
 
