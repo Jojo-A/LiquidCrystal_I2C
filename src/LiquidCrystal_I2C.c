@@ -33,7 +33,36 @@
 
 const uint8_t LCDpinMapping[8] = {4, 5, 6, 16, 11, 12, 13, 14}
 
-LiquidCrystal_I2C(PCF8574_address addr, uint8_t* pinMapping, backlightPolarity polarity)
+LiquidCrystal_I2C _lcd;
+
+/**************************************************************************/
+/*
+    LCDbegin()
+
+    Initializes, resets & configures I2C bus & LCD
+*/
+/**************************************************************************/
+bool LCDbegin(LiquidCrystal_I2C lcd);
+{
+  LCDinit(lcd);
+	
+  if (_PCF8574_initialisation == false) return false; //safety check, make sure the declaration of lcd pins is right
+
+  //Wire.beginTransmission(_PCF8574_address);
+  //if (Wire.endTransmission() != 0) return false;      //safety check, make sure the PCF8574 is connected
+
+  if(writePCF8574(PCF8574_ALL_LOW) == false) return false;                      //safety check, set all PCF8574 pins low
+	
+  _lcd.colums 	 = lcd.colums;
+  _lcd.rows      = lcd.rows;
+  _lcd.font_size = lcd.f_size;
+
+  LCDinitialization();                                   //soft reset & 4-bit mode initialization
+
+  return true;
+}
+
+LCDinit(PCF8574_address addr, uint8_t* pinMapping, backlightPolarity polarity)
 {
   _PCF8574_address        = addr;
   _PCF8574_initialisation = true;
@@ -98,30 +127,6 @@ LiquidCrystal_I2C(PCF8574_address addr, uint8_t* pinMapping, backlightPolarity p
   _backlightValue <<= _LCD_TO_PCF8574[0];
 }
 
-/**************************************************************************/
-/*
-    LCDbegin()
-
-    Initializes, resets & configures I2C bus & LCD
-*/
-/**************************************************************************/
-bool LCDbegin(uint8_t lcd_colums, uint8_t lcd_rows, lcd_font_size f_size)
-{	
-  if (_PCF8574_initialisation == false) return false; //safety check, make sure the declaration of lcd pins is right
-
-  //Wire.beginTransmission(_PCF8574_address);
-  //if (Wire.endTransmission() != 0) return false;      //safety check, make sure the PCF8574 is connected
-
-  if(writePCF8574(PCF8574_ALL_LOW) == false) return false;                      //safety check, set all PCF8574 pins low
-	
-  _lcd_colums 	 = lcd_colums;
-  _lcd_rows      = lcd_rows;
-  _lcd_font_size = f_size;
-
-  LCDinitialization();                                   //soft reset & 4-bit mode initialization
-
-  return true;
-}
 
 /**************************************************************************/
 /*
