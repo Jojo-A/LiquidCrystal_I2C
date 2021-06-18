@@ -1,33 +1,18 @@
 /***************************************************************************************************/
 /*
-   This is an Arduino library for HD44780, S6A0069, KS0066U, NT3881D, LC7985, ST7066, SPLC780,
+   This is a library for HD44780, S6A0069, KS0066U, NT3881D, LC7985, ST7066, SPLC780,
    WH160xB, AIP31066, GDM200xD, ADM0802A LCD displays.
 
    Screens are operated in 4 bit mode over i2c bus with 8-bit I/O expander PCF8574x.
    Typical displays sizes: 8x2, 16x1, 16x2, 16x4, 20x2, 20x4 & etc.
 
-   written by : enjoyneering79
+   written by : enjoyneering79, edited by Jojo-A
    sourse code: https://github.com/enjoyneering/
 
 
    This chip uses I2C bus to communicate, specials pins are required to interface
    Board:                                    SDA                    SCL                    Level
-   Uno, Mini, Pro, ATmega168, ATmega328..... A4                     A5                     5v
-   Mega2560................................. 20                     21                     5v
-   Due, SAM3X8E............................. 20                     21                     3.3v
-   Leonardo, Micro, ATmega32U4.............. 2                      3                      5v
-   Digistump, Trinket, ATtiny85............. 0/physical pin no.5    2/physical pin no.7    5v
    Blue Pill, STM32F103xxxx boards.......... PB7                    PB6                    3.3v/5v
-   ESP8266 ESP-01........................... GPIO0/D5               GPIO2/D3               3.3v/5v
-   NodeMCU 1.0, WeMos D1 Mini............... GPIO4/D2               GPIO5/D1               3.3v/5v
-   ESP32.................................... GPIO21/D21             GPIO22/D22             3.3v
-
-   Frameworks & Libraries:
-   ATtiny Core           - https://github.com/SpenceKonde/ATTinyCore
-   ESP32 Core            - https://github.com/espressif/arduino-esp32
-   ESP8266 Core          - https://github.com/esp8266/Arduino
-   ESP8266 I2C lib fixed - https://github.com/enjoyneering/ESP8266-I2C-Driver
-   STM32 Core            - https://github.com/rogerclarkmelbourne/Arduino_STM32
 
    GNU GPL license, all text above must be included in any redistribution,
    see link for details  - https://www.gnu.org/licenses/licenses.html
@@ -37,24 +22,7 @@
 #ifndef LiquidCrystal_i2c_h
 #define LiquidCrystal_i2c_h
 
-#if defined(ARDUINO) && ((ARDUINO) >= 100) //arduino core v1.0 or later
-#include <Arduino.h>
-#else
-#include <WProgram.h>
-#endif
-
-#if defined(__AVR__)
-#include <avr/pgmspace.h>                  //use for PROGMEM Arduino AVR
-#elif defined(ESP8266)
-#include <pgmspace.h>                      //use for PROGMEM Arduino ESP8266
-#elif defined(_VARIANT_ARDUINO_STM32_)
-#include <avr/pgmspace.h>                  //use for PROGMEM Arduino STM32
-#endif
-
-#include <Wire.h>
-#include <inttypes.h>
-#include <Print.h>
-
+#include <stdint.h>
 
 /* 
    lcd main register commands
@@ -167,50 +135,53 @@ typedef enum : uint8_t
 }
 backlightPolarity;
 
+/* This here was under "public:" */
+bool LCDbegin(uint8_t lcd_colums = 16, uint8_t lcd_rows = 2, lcd_font_size = LCD_5x8DOTS);
+void LCDclear(void);
+void LCDhome(void);
+void LCDsetCursor(uint8_t colum, uint8_t row);
+void LCDnoDisplay(void);
+void LCDdisplay(void);
+void LCDnoBlink(void);
+void LCDblink(void);
+void LCDnoCursor(void);
+void LCDcursor(void);
+void LCDscrollDisplayLeft(void);
+void LCDscrollDisplayRight(void);
+void LCDleftToRight(void);
+void LCDrightToLeft(void);
+void LCDautoscroll(void);
+void LCDnoAutoscroll(void); 
+void LCDcreateChar(uint8_t CGRAM_address,       uint8_t *char_pattern);
+void LCDnoBacklight(void);
+void LCDbacklight(void);
+
+void LCDwrite(uint8_t value);
+
+/*************** !!! arduino not standard API functions !!! ***************/
+void LCDprintHorizontalGraph(char name, uint8_t row, uint16_t currentValue, uint16_t maxValue);
+void LCDdisplayOff(void);
+void LCDdisplayOn(void);  
+void LCDsetBrightness(uint8_t pin, uint8_t value, backlightPolarity polarity);
+
+/**************************************************************************/
+
+/* This here was under "private:" */
+void initialization(void);
+void    send(uint8_t mode, uint8_t value, uint8_t length);
+inline uint8_t portMapping(uint8_t value);
+bool    writePCF8574(uint8_t value);
+uint8_t readPCF8574(void);
+bool    readBusyFlag(void);
+uint8_t getCursorPosition(void);
+/**************************************************************************/
+
 class LiquidCrystal_I2C : public Print 
 {
   public:
    LiquidCrystal_I2C(PCF8574_address = PCF8574_ADDR_A21_A11_A01, uint8_t P0 = 4, uint8_t P1 = 5, uint8_t P2 = 6, uint8_t P3 = 16, uint8_t P4 = 11, uint8_t P5 = 12, uint8_t P6 = 13, uint8_t P7 = 14, backlightPolarity = POSITIVE);
  
-   #if defined(ESP8266)
-   bool begin(uint8_t lcd_colums = 16, uint8_t lcd_rows = 2, lcd_font_size = LCD_5x8DOTS, uint8_t sda = SDA, uint8_t scl = SCL);
-   #else
-   bool begin(uint8_t lcd_colums = 16, uint8_t lcd_rows = 2, lcd_font_size = LCD_5x8DOTS);
-   #endif
-   void clear(void);
-   void home(void);
-   void setCursor(uint8_t colum, uint8_t row);
-   void noDisplay(void);
-   void display(void);
-   void noBlink(void);
-   void blink(void);
-   void noCursor(void);
-   void cursor(void);
-   void scrollDisplayLeft(void);
-   void scrollDisplayRight(void);
-   void leftToRight(void);
-   void rightToLeft(void);
-   void autoscroll(void);
-   void noAutoscroll(void); 
-   void createChar(uint8_t CGRAM_address,       uint8_t *char_pattern);
-   #if defined (PROGMEM)
-   void createChar(uint8_t CGRAM_address, const uint8_t *char_pattern);
-   #endif
-   void noBacklight(void);
-   void backlight(void);
-
-   /* "write()" replacement in Arduino "Print" class */
-   #if defined(ARDUINO) && ((ARDUINO) >= 100)
-   size_t write(uint8_t value);
-   #else
-   void write(uint8_t value);
-   #endif
-
-   /*************** !!! arduino not standard API functions !!! ***************/
-   void printHorizontalGraph(char name, uint8_t row, uint16_t currentValue, uint16_t maxValue);
-   void displayOff(void);
-   void displayOn(void);  
-   void setBrightness(uint8_t pin, uint8_t value, backlightPolarity polarity);
+   
 	 
   private:
    uint8_t _displayControl = 0; //DO NOT CHANGE!!! default bits value: DB7, DB6, DB5, DB4, DB3, DB2=(D), DB1=(C),   DB0=(B)
@@ -225,13 +196,7 @@ class LiquidCrystal_I2C : public Print
    lcd_font_size     _lcd_font_size;
    backlightPolarity _backlightPolarity;
 
-          void    initialization(void);
-          void    send(uint8_t mode, uint8_t value, uint8_t length);
-   inline uint8_t portMapping(uint8_t value);
-          bool    writePCF8574(uint8_t value);
-          uint8_t readPCF8574(void);
-          bool    readBusyFlag(void);
-          uint8_t getCursorPosition(void);
+         
 };
 
 #endif
