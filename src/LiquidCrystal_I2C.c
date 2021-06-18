@@ -98,20 +98,12 @@ LiquidCrystal_I2C(PCF8574_address addr, uint8_t P0, uint8_t P1, uint8_t P2, uint
 
 /**************************************************************************/
 /*
-    begin()
+    LCDbegin()
 
     Initializes, resets & configures I2C bus & LCD
-
-    NOTE:
-    - Wire.endTransmission() returned code:
-      0 - success
-      1 - data too long to fit in transmit data16
-      2 - received NACK on transmit of address
-      3 - received NACK on transmit of data
-      4 - other error
 */
 /**************************************************************************/
-bool begin(uint8_t lcd_colums, uint8_t lcd_rows, lcd_font_size f_size)
+bool LCDbegin(uint8_t lcd_colums, uint8_t lcd_rows, lcd_font_size f_size)
 {	
   if (_PCF8574_initialisation == false) return false; //safety check, make sure the declaration of lcd pins is right
 
@@ -124,14 +116,14 @@ bool begin(uint8_t lcd_colums, uint8_t lcd_rows, lcd_font_size f_size)
   _lcd_rows      = lcd_rows;
   _lcd_font_size = f_size;
 
-  initialization();                                   //soft reset & 4-bit mode initialization
+  LCDinitialization();                                   //soft reset & 4-bit mode initialization
 
   return true;
 }
 
 /**************************************************************************/
 /*
-    clear()
+    LCDclear()
 
     Clears display & move cursor to home position
 
@@ -141,16 +133,16 @@ bool begin(uint8_t lcd_colums, uint8_t lcd_rows, lcd_font_size f_size)
     - command duration > 1.53 - 1.64ms
 */
 /**************************************************************************/
-void clear(void)
+void LCDclear(void)
 {
-  send(LCD_INSTRUCTION_WRITE, LCD_CLEAR_DISPLAY, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_CLEAR_DISPLAY, LCD_CMD_LENGTH_8BIT);
 
-  delay(LCD_HOME_CLEAR_DELAY);
+  HAL_Delay(LCD_HOME_CLEAR_DELAY);
 }
 
 /**************************************************************************/
 /*
-    home()
+    LCDhome()
 
     Moves cursor position to home position
 
@@ -160,16 +152,16 @@ void clear(void)
     - command duration > 1.53 - 1.64ms
 */
 /**************************************************************************/
-void home(void)
+void LCDhome(void)
 {
-  send(LCD_INSTRUCTION_WRITE, LCD_RETURN_HOME, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_RETURN_HOME, LCD_CMD_LENGTH_8BIT);
 
   HAL_Delay(LCD_HOME_CLEAR_DELAY);
 }
 
 /**************************************************************************/
 /*
-    setCursor()
+    LCDsetCursor()
 
     Sets cursor position
 
@@ -179,7 +171,7 @@ void home(void)
     - DDRAM data/text is sent & received after this setting
 */
 /**************************************************************************/
-void setCursor(uint8_t colum, uint8_t row)
+void LCDsetCursor(uint8_t colum, uint8_t row)
 {
   uint8_t row_address_offset[] = {0x00, 0x40, uint8_t(0x00 + _lcd_colums), uint8_t(0x40 + _lcd_colums)};
 
@@ -187,12 +179,12 @@ void setCursor(uint8_t colum, uint8_t row)
   if (row   >= _lcd_rows)   row   = (_lcd_rows   - 1);
   if (colum >= _lcd_colums) colum = (_lcd_colums - 1);
 
-  send(LCD_INSTRUCTION_WRITE, LCD_DDRAM_ADDR_SET | (row_address_offset[row] + colum), LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_DDRAM_ADDR_SET | (row_address_offset[row] + colum), LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    noDisplay()
+    LCDnoDisplay()
 
     Clears text from the screen
 
@@ -200,16 +192,16 @@ void setCursor(uint8_t colum, uint8_t row)
     - text remains in DDRAM
 */
 /**************************************************************************/
-void noDisplay(void)
+void LCDnoDisplay(void)
 {
   _displayControl &= ~LCD_DISPLAY_ON;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    display()
+    LCDdisplay()
 
     Retrives text from DDRAM
 
@@ -217,11 +209,11 @@ void noDisplay(void)
     - text remains in DDRAM
 */
 /**************************************************************************/
-void display(void)
+void LCDdisplay(void)
 {
   _displayControl |= LCD_DISPLAY_ON;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
@@ -231,39 +223,39 @@ void display(void)
     Turns OFF the underline cursor
 */
 /**************************************************************************/
-void noCursor(void)
+void LCDnoCursor(void)
 {
   _displayControl &= ~LCD_UNDERLINE_CURSOR_ON;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    cursor()
+    LCDcursor()
 
     Turns ON the underline cursor
 */
 /**************************************************************************/
-void cursor(void)
+void LCDcursor(void)
 {
   _displayControl |= LCD_UNDERLINE_CURSOR_ON;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    noBlink()
+    LCDnoBlink()
 
     Turns OFF the blinking cursor
 */
 /**************************************************************************/
-void noBlink(void)
+void LCDnoBlink(void)
 {
   _displayControl &= ~LCD_BLINK_CURSOR_ON;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
@@ -273,16 +265,16 @@ void noBlink(void)
     Turns ON the blinking cursor
 */
 /**************************************************************************/
-void blink(void)
+void LCDblink(void)
 {
   _displayControl |= LCD_BLINK_CURSOR_ON;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_DISPLAY_CONTROL | _displayControl, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    scrollDisplayLeft()
+    LCDscrollDisplayLeft()
 
     Scrolls once current row with text on the display to the left
 
@@ -291,14 +283,14 @@ void blink(void)
     - text grows from cursor to the left
 */
 /**************************************************************************/
-void scrollDisplayLeft(void)
+void LCDscrollDisplayLeft(void)
 {
-  send(LCD_INSTRUCTION_WRITE, LCD_CURSOR_DISPLAY_SHIFT | LCD_DISPLAY_SHIFT | LCD_SHIFT_LEFT, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_CURSOR_DISPLAY_SHIFT | LCD_DISPLAY_SHIFT | LCD_SHIFT_LEFT, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    scrollDisplayRight()
+    LCDscrollDisplayRight()
 
     Scrolls once current row with text on the display to the right
 
@@ -307,42 +299,42 @@ void scrollDisplayLeft(void)
     - text & cursor grows together to the left from cursor position
 */
 /**************************************************************************/
-void scrollDisplayRight(void)
+void LCDscrollDisplayRight(void)
 {
-  send(LCD_INSTRUCTION_WRITE, LCD_CURSOR_DISPLAY_SHIFT | LCD_DISPLAY_SHIFT | LCD_SHIFT_RIGHT, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_CURSOR_DISPLAY_SHIFT | LCD_DISPLAY_SHIFT | LCD_SHIFT_RIGHT, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    leftToRight()
+    LCDleftToRight()
 
     Sets text direction from left to right
 */
 /**************************************************************************/
-void leftToRight(void)
+void LCDleftToRight(void)
 {
   _displayMode |= LCD_ENTRY_LEFT;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    rightToLeft()
+    LCDrightToLeft()
 
     Sets text direction from right to left
 */
 /**************************************************************************/
-void rightToLeft(void)
+void LCDrightToLeft(void)
 {
   _displayMode &= ~LCD_ENTRY_LEFT;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    autoscroll()
+    LCDautoscroll()
 
     Autoscrolls the text rightToLeft() or rightToRight() on the display
 
@@ -352,17 +344,17 @@ void rightToLeft(void)
       call it the loop, just call it once it setup()
 */
 /**************************************************************************/
-void autoscroll(void) 
+void LCDautoscroll(void) 
 {
   _displayMode |= LCD_ENTRY_SHIFT_ON;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
 }
 
 
 /**************************************************************************/
 /*
-    noAutoscroll()
+    LCDnoAutoscroll()
 
     Stops text autoscrolling on the display
 
@@ -370,16 +362,16 @@ void autoscroll(void)
     - whole text on the display stays, cursor shifts when byte written
 */
 /**************************************************************************/
-void noAutoscroll(void)
+void LCDnoAutoscroll(void)
 {
   _displayMode &= ~LCD_ENTRY_SHIFT_ON;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
 /*
-    createChar()
+    LCDcreateChar()
 
     Fills 64-bytes CGRAM, with custom characters from dynamic memory
 
@@ -390,7 +382,7 @@ void noAutoscroll(void)
       & read address 0..3/0..7
 */
 /**************************************************************************/
-void createChar(uint8_t CGRAM_address, uint8_t *char_pattern)
+void LCDcreateChar(uint8_t CGRAM_address, uint8_t *char_pattern)
 {
   uint8_t CGRAM_capacity = 0;
   int8_t  font_size      = 0;
@@ -412,62 +404,18 @@ void createChar(uint8_t CGRAM_address, uint8_t *char_pattern)
   /* safety check, make sure "CGRAM_address" never exceeds the "CGRAM_capacity" */
   if (CGRAM_address > CGRAM_capacity) CGRAM_address = CGRAM_capacity;
 
-  send(LCD_INSTRUCTION_WRITE, LCD_CGRAM_ADDR_SET | (CGRAM_address << 3), LCD_CMD_LENGTH_8BIT); //set CGRAM address
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_CGRAM_ADDR_SET | (CGRAM_address << 3), LCD_CMD_LENGTH_8BIT); //set CGRAM address
 
   for (uint8_t i = 0; i < font_size; i++)
   {
-    send(LCD_DATA_WRITE, char_pattern[i], LCD_CMD_LENGTH_8BIT);                                //write data from dynamic memory to CGRAM address
+    LCDsend(LCD_DATA_WRITE, char_pattern[i], LCD_CMD_LENGTH_8BIT);                                //write data from dynamic memory to CGRAM address
   }
 }
 
-/**************************************************************************/
-/*
-    createChar()
-
-    Fills 64-bytes CGRAM, with custom characters from flash memory
-
-    NOTE:
-    - 8 patterns for 5x8DOTS display, write address 0..7
-      & read address 0..7/8..15
-    - 4 patterns for 5x10DOTS display, wrire address 0..3
-      & read address 0..3/0..7
-*/
-/**************************************************************************/
-#if defined (PROGMEM)
-void createChar(uint8_t CGRAM_address, const uint8_t *char_pattern)
-{
-  uint8_t CGRAM_capacity = 0;
-  int8_t  font_size      = 0;
-
-  /* set CGRAM capacity */
-  switch (_lcd_font_size)
-  {
-    case LCD_5x8DOTS:
-      CGRAM_capacity = 7;                                                                      //8 patterns, 0..7
-      font_size      = 8;
-      break;
-
-    case LCD_5x10DOTS:
-      CGRAM_capacity = 3;                                                                      //4 patterns, 0..3
-      font_size      = 10;
-      break;
-  }
-
-  /* safety check, make sure "CGRAM_address" never exceeds the "CGRAM_capacity" */
-  if (CGRAM_address > CGRAM_capacity) CGRAM_address = CGRAM_capacity;
-
-  send(LCD_INSTRUCTION_WRITE, LCD_CGRAM_ADDR_SET | (CGRAM_address << 3), LCD_CMD_LENGTH_8BIT); //set CGRAM address
-
-  while (font_size-- > 0)
-  {
-    send(LCD_DATA_WRITE, pgm_read_byte(char_pattern++), LCD_CMD_LENGTH_8BIT);                  //write data from flash memory to CGRAM address
-  }
-}
-#endif
 
 /**************************************************************************/
 /*
-    noBacklight()
+    LCDnoBacklight()
 
     Turns off the backlight via PCF8574. 
 
@@ -476,7 +424,7 @@ void createChar(uint8_t CGRAM_address, const uint8_t *char_pattern)
       transistor conncted to PCF8574 port
 */
 /**************************************************************************/
-void noBacklight(void)
+void LCDnoBacklight(void)
 {
   switch (_backlightPolarity)
   {
@@ -505,7 +453,7 @@ void noBacklight(void)
       transistor conncted to PCF8574 port
 */
 /**************************************************************************/
-void backlight(void)
+void LCDbacklight(void)
 {
   switch (_backlightPolarity)
   {
@@ -525,15 +473,15 @@ void backlight(void)
 
 /**************************************************************************/
 /*
-    write()
+    LCDwrite()
 
     Replaces function "write()" in Arduino class "Print" & sends character
     to the LCD
 */
 /**************************************************************************/
-void write(uint8_t value)
+void LCDwrite(uint8_t value)
 {
-  send(LCD_DATA_WRITE, value, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_DATA_WRITE, value, LCD_CMD_LENGTH_8BIT);
 }
 
 /**************************************************************************/
@@ -549,7 +497,7 @@ void write(uint8_t value)
       WH1602B/WH1604B datasheet for details.
 */
 /**************************************************************************/
-void initialization(void)
+void LCDinitialization(void)
 {
   uint8_t displayFunction = 0; //don't change!!! default bits value DB7, DB6, DB5, DB4=(DL), DB3=(N), DB2=(F), DB1, DB0
 
@@ -563,7 +511,7 @@ void initialization(void)
      - wait > 4.1ms, some LCD even slower than 4.5ms
      - for Hitachi & Winstar displays
   */
-  send(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_8BIT_MODE, LCD_CMD_LENGTH_4BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_8BIT_MODE, LCD_CMD_LENGTH_4BIT);
   HAL_Delay(5);
 
   /*
@@ -571,21 +519,21 @@ void initialization(void)
      - wait > 100us.
      - for Hitachi, not needed for Winstar displays
   */
-  send(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_8BIT_MODE, LCD_CMD_LENGTH_4BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_8BIT_MODE, LCD_CMD_LENGTH_4BIT);
   HAL_Delay(1);
 	
   /*
      THIRD ATTEMPT: set 8 bit mode
      - used for Hitachi, not needed for Winstar displays
   */
-  send(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_8BIT_MODE, LCD_CMD_LENGTH_4BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_8BIT_MODE, LCD_CMD_LENGTH_4BIT);
   HAL_Delay(1);
 	
   /*
      FINAL ATTEMPT: set 4-bit interface
      - Busy Flag (BF) can be checked after this instruction
   */
-  send(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_4BIT_MODE, LCD_CMD_LENGTH_4BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_4BIT_MODE, LCD_CMD_LENGTH_4BIT);
 
   /* sets qnt. of lines */
   if (_lcd_rows > 1) displayFunction |= LCD_2_LINE;    //line bit located at BD3 & zero/1 line by default
@@ -598,20 +546,20 @@ void initialization(void)
   }
 
   /* initializes lcd functions: qnt. of lines, font size, etc., this settings can't be changed after this point */
-  send(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_4BIT_MODE | displayFunction, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_4BIT_MODE | displayFunction, LCD_CMD_LENGTH_8BIT);
 	
   /* initializes lcd controls: turn display off, underline cursor off & blinking cursor off */
   _displayControl = LCD_UNDERLINE_CURSOR_OFF | LCD_BLINK_CURSOR_OFF;
-  noDisplay();
+  LCDnoDisplay();
 
   /* clear display */
-  clear();
+  LCDclear();
 
   /* initializes lcd basics: sets text direction "left to right" & cursor movement to the right */
   _displayMode = LCD_ENTRY_LEFT | LCD_ENTRY_SHIFT_OFF;
-  send(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
+  LCDsend(LCD_INSTRUCTION_WRITE, LCD_ENTRY_MODE_SET | _displayMode, LCD_CMD_LENGTH_8BIT);
 
-  display();
+  LCDdisplay();
 }
 
 /**************************************************************************/
@@ -629,7 +577,7 @@ void initialization(void)
     - duration of the En pulse > 450nsec
 */
 /**************************************************************************/
-void send(uint8_t mode, uint8_t value, uint8_t length)
+void LCDsend(uint8_t mode, uint8_t value, uint8_t length)
 {
   uint8_t  halfByte = 0; //lsb or msb
   uint8_t  data     = 0, dataBuffer[2] = {0};
@@ -664,7 +612,7 @@ void send(uint8_t mode, uint8_t value, uint8_t length)
 
 /**************************************************************************/
 /*
-    portMapping()
+    LCDportMapping()
 
     All magic of all lcd pins to ports mapping is happening here!!!
 
@@ -686,7 +634,7 @@ void send(uint8_t mode, uint8_t value, uint8_t length)
       bitWrite(data, _LCD_TO_PCF8574[i], bitRead(value, i));
 */
 /**************************************************************************/
-uint8_t portMapping(uint8_t value)
+uint8_t LCDportMapping(uint8_t value)
 {
   uint8_t data = 0;
 
@@ -775,16 +723,16 @@ uint8_t readPCF8574()
       - RS,RW,E,DB3,DB2,DB1,DB0,BCK_LED
 */
 /**************************************************************************/
-bool readBusyFlag()
+bool LCDreadBusyFlag()
 {
-  send(LCD_BUSY_FLAG_READ, PCF8574_DATA_HIGH, LCD_CMD_LENGTH_4BIT); //set RS=0, RW=1 & input pins to HIGH, see Quasi-Bidirectional I/O
+  LCDsend(LCD_BUSY_FLAG_READ, PCF8574_DATA_HIGH, LCD_CMD_LENGTH_4BIT); //set RS=0, RW=1 & input pins to HIGH, see Quasi-Bidirectional I/O
 
   return bitRead(readPCF8574(), _LCD_TO_PCF8574[4]);
 }
 
 /**************************************************************************/
 /*
-    getCursorPosition()
+    LCDgetCursorPosition()
 
     Returns contents of address counter
 
@@ -798,12 +746,12 @@ bool readBusyFlag()
       - RS,RW,E,DB3,DB2,DB1,DB0,BCK_LED
 */
 /**************************************************************************/
-uint8_t getCursorPosition()
+uint8_t LCDgetCursorPosition()
 {
   uint8_t data     = 0;
   uint8_t position = 0;
 
-  send(LCD_BUSY_FLAG_READ, PCF8574_DATA_HIGH, LCD_CMD_LENGTH_4BIT); //set RS=0, RW=1 & input pins to HIGH, see Quasi-Bidirectional I/O
+  LCDsend(LCD_BUSY_FLAG_READ, PCF8574_DATA_HIGH, LCD_CMD_LENGTH_4BIT); //set RS=0, RW=1 & input pins to HIGH, see Quasi-Bidirectional I/O
 
   data = readPCF8574();                                             //read RS,RW,E,DB7,DB6,DB5,DB4,BCK_LED
 
@@ -813,7 +761,7 @@ uint8_t getCursorPosition()
     bitWrite(position, (3 + i), bitRead(data, _LCD_TO_PCF8574[i])); //xx,DB6,DB5,DB4,DB3,DB2,DB1,DB0
   }
 
-  send(LCD_BUSY_FLAG_READ, PCF8574_DATA_HIGH, LCD_CMD_LENGTH_4BIT); //set RS=0, RW=1 & input pins to HIGH, see Quasi-Bidirectional I/O
+  LCDsend(LCD_BUSY_FLAG_READ, PCF8574_DATA_HIGH, LCD_CMD_LENGTH_4BIT); //set RS=0, RW=1 & input pins to HIGH, see Quasi-Bidirectional I/O
 
   data = readPCF8574();                                             //read RS,RW,E,DB3,DB2,DB1,DB0,BCK_LED
 
@@ -829,12 +777,12 @@ uint8_t getCursorPosition()
 /*************** !!! arduino not standard API functions !!! ***************/
 /**************************************************************************/
 /*
-    printHorizontalGraph(name, row, value, maxValue)
+    LCDprintHorizontalGraph(name, row, value, maxValue)
 
     Prints horizontal graph
 */
 /**************************************************************************/
-void printHorizontalGraph(char name, uint8_t row, uint16_t currentValue, uint16_t maxValue)
+void LCDprintHorizontalGraph(char name, uint8_t row, uint16_t currentValue, uint16_t maxValue)
 {
   uint8_t currentGraph = 0;
   uint8_t colum        = 0;
@@ -862,7 +810,7 @@ void printHorizontalGraph(char name, uint8_t row, uint16_t currentValue, uint16_
 
 /**************************************************************************/
 /*
-    displayOff()
+    LCDdisplayOff()
 
     Turns off backlight via PCF8574 & clears text from the screen
 
@@ -870,23 +818,23 @@ void printHorizontalGraph(char name, uint8_t row, uint16_t currentValue, uint16_
     - text remains in DDRAM
 */
 /**************************************************************************/
-void displayOff(void)
+void LCDdisplayOff(void)
 {
-  noBacklight();
-  noDisplay();
+  LCDnoBacklight();
+  LCDnoDisplay();
 }
 
 /**************************************************************************/
 /*
-    displayOn()
+    LCDdisplayOn()
 
     Turns on backlight via PCF8574 & shows text from DDRAM
 */
 /**************************************************************************/
-void displayOn(void)
+void LCDdisplayOn(void)
 {
-  display();
-  backlight();
+  LCDdisplay();
+  LCDbacklight();
 }
 
 /**************************************************************************/
