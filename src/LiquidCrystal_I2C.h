@@ -176,6 +176,13 @@ bool    readBusyFlag(void);
 uint8_t getCursorPosition(void);
 /**************************************************************************/
 
+typedef struct
+{
+  PCF8574_address   _PCF8574_address;
+  lcd_font_size     _lcd_font_size;
+  backlightPolarity _backlightPolarity;	
+}LiquidCrystal_I2C;
+
 class LiquidCrystal_I2C : public Print 
 {
   public:
@@ -192,9 +199,7 @@ class LiquidCrystal_I2C : public Print
    uint8_t _LCD_TO_PCF8574[8];
    bool    _PCF8574_initialisation;
 
-   PCF8574_address   _PCF8574_address;
-   lcd_font_size     _lcd_font_size;
-   backlightPolarity _backlightPolarity;
+   
 
          
 };
