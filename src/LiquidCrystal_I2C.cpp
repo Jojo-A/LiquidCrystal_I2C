@@ -1,33 +1,18 @@
 /***************************************************************************************************/
 /*
-   This is an Arduino library for HD44780, S6A0069, KS0066U, NT3881D, LC7985, ST7066, SPLC780,
+   This is a library for HD44780, S6A0069, KS0066U, NT3881D, LC7985, ST7066, SPLC780,
    WH160xB, AIP31066, GDM200xD, ADM0802A LCD displays.
 
    Screens are operated in 4 bit mode over i2c bus with 8-bit I/O expander PCF8574x.
    Typical displays sizes: 8x2, 16x1, 16x2, 16x4, 20x2, 20x4 & etc.
 
-   written by : enjoyneering79
+   written by : enjoyneering79, edited by Jojo-A
    sourse code: https://github.com/enjoyneering/
 
 
    This chip uses I2C bus to communicate, specials pins are required to interface
    Board:                                    SDA                    SCL                    Level
-   Uno, Mini, Pro, ATmega168, ATmega328..... A4                     A5                     5v
-   Mega2560................................. 20                     21                     5v
-   Due, SAM3X8E............................. 20                     21                     3.3v
-   Leonardo, Micro, ATmega32U4.............. 2                      3                      5v
-   Digistump, Trinket, ATtiny85............. 0/physical pin no.5    2/physical pin no.7    5v
    Blue Pill, STM32F103xxxx boards.......... PB7                    PB6                    3.3v/5v
-   ESP8266 ESP-01........................... GPIO0/D5               GPIO2/D3               3.3v/5v
-   NodeMCU 1.0, WeMos D1 Mini............... GPIO4/D2               GPIO5/D1               3.3v/5v
-   ESP32.................................... GPIO21/D21             GPIO22/D22             3.3v
-
-   Frameworks & Libraries:
-   ATtiny Core           - https://github.com/SpenceKonde/ATTinyCore
-   ESP32 Core            - https://github.com/espressif/arduino-esp32
-   ESP8266 Core          - https://github.com/esp8266/Arduino
-   ESP8266 I2C lib fixed - https://github.com/enjoyneering/ESP8266-I2C-Driver
-   STM32 Core            - https://github.com/rogerclarkmelbourne/Arduino_STM32
 
    GNU GPL license, all text above must be included in any redistribution,
    see link for details  - https://www.gnu.org/licenses/licenses.html
@@ -45,7 +30,7 @@
     LCD & PCF8574 pins.
 */
 /**************************************************************************/  
-LiquidCrystal_I2C::LiquidCrystal_I2C(PCF8574_address addr, uint8_t P0, uint8_t P1, uint8_t P2, uint8_t P3, uint8_t P4, uint8_t P5, uint8_t P6, uint8_t P7, backlightPolarity polarity)
+LiquidCrystal_I2C(PCF8574_address addr, uint8_t P0, uint8_t P1, uint8_t P2, uint8_t P3, uint8_t P4, uint8_t P5, uint8_t P6, uint8_t P7, backlightPolarity polarity)
 {
   uint8_t PCF8574_TO_LCD[8] = {P0, P1, P2, P3, P4, P5, P6, P7}; //PCF8574 ports to LCD pins mapping array
 
@@ -126,26 +111,15 @@ LiquidCrystal_I2C::LiquidCrystal_I2C(PCF8574_address addr, uint8_t P0, uint8_t P
       4 - other error
 */
 /**************************************************************************/
-#if defined(ESP8266)
-bool LiquidCrystal_I2C::begin(uint8_t lcd_colums, uint8_t lcd_rows, lcd_font_size f_size, uint8_t sda, uint8_t scl)
-{
-  Wire.begin(sda, scl);
-  Wire.setClock(100000UL);                            //experimental! ESP8266 i2c bus speed: 100kHz..400kHz/100000UL..400000UL, default 100000UL
-  Wire.setClockStretchLimit(230);                     //experimental! default 230
-#else
-bool LiquidCrystal_I2C::begin(uint8_t lcd_colums, uint8_t lcd_rows, lcd_font_size f_size)
-{
-  Wire.begin();
-  Wire.setClock(100000UL);                            //experimental! AVR i2c bus speed: AVR 31kHz..400kHz/31000UL..400000UL, default 100000UL
-#endif
-
+bool begin(uint8_t lcd_colums, uint8_t lcd_rows, lcd_font_size f_size)
+{	
   if (_PCF8574_initialisation == false) return false; //safety check, make sure the declaration of lcd pins is right
 
-  Wire.beginTransmission(_PCF8574_address);
-  if (Wire.endTransmission() != 0) return false;      //safety check, make sure the PCF8574 is connected
+  //Wire.beginTransmission(_PCF8574_address);
+  //if (Wire.endTransmission() != 0) return false;      //safety check, make sure the PCF8574 is connected
 
-  writePCF8574(PCF8574_ALL_LOW);                      //safety check, set all PCF8574 pins low
-
+  if(writePCF8574(PCF8574_ALL_LOW) == false) return false;                      //safety check, set all PCF8574 pins low
+	
   _lcd_colums 	 = lcd_colums;
   _lcd_rows      = lcd_rows;
   _lcd_font_size = f_size;
@@ -167,7 +141,7 @@ bool LiquidCrystal_I2C::begin(uint8_t lcd_colums, uint8_t lcd_rows, lcd_font_siz
     - command duration > 1.53 - 1.64ms
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::clear(void)
+void clear(void)
 {
   send(LCD_INSTRUCTION_WRITE, LCD_CLEAR_DISPLAY, LCD_CMD_LENGTH_8BIT);
 
@@ -186,7 +160,7 @@ void LiquidCrystal_I2C::clear(void)
     - command duration > 1.53 - 1.64ms
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::home(void)
+void home(void)
 {
   send(LCD_INSTRUCTION_WRITE, LCD_RETURN_HOME, LCD_CMD_LENGTH_8BIT);
 
@@ -205,7 +179,7 @@ void LiquidCrystal_I2C::home(void)
     - DDRAM data/text is sent & received after this setting
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::setCursor(uint8_t colum, uint8_t row)
+void setCursor(uint8_t colum, uint8_t row)
 {
   uint8_t row_address_offset[] = {0x00, 0x40, uint8_t(0x00 + _lcd_colums), uint8_t(0x40 + _lcd_colums)};
 
@@ -226,7 +200,7 @@ void LiquidCrystal_I2C::setCursor(uint8_t colum, uint8_t row)
     - text remains in DDRAM
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::noDisplay(void)
+void noDisplay(void)
 {
   _displayControl &= ~LCD_DISPLAY_ON;
 
@@ -243,7 +217,7 @@ void LiquidCrystal_I2C::noDisplay(void)
     - text remains in DDRAM
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::display(void)
+void display(void)
 {
   _displayControl |= LCD_DISPLAY_ON;
 
@@ -257,7 +231,7 @@ void LiquidCrystal_I2C::display(void)
     Turns OFF the underline cursor
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::noCursor(void)
+void noCursor(void)
 {
   _displayControl &= ~LCD_UNDERLINE_CURSOR_ON;
 
@@ -271,7 +245,7 @@ void LiquidCrystal_I2C::noCursor(void)
     Turns ON the underline cursor
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::cursor(void)
+void cursor(void)
 {
   _displayControl |= LCD_UNDERLINE_CURSOR_ON;
 
@@ -285,7 +259,7 @@ void LiquidCrystal_I2C::cursor(void)
     Turns OFF the blinking cursor
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::noBlink(void)
+void noBlink(void)
 {
   _displayControl &= ~LCD_BLINK_CURSOR_ON;
 
@@ -299,7 +273,7 @@ void LiquidCrystal_I2C::noBlink(void)
     Turns ON the blinking cursor
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::blink(void)
+void blink(void)
 {
   _displayControl |= LCD_BLINK_CURSOR_ON;
 
@@ -317,7 +291,7 @@ void LiquidCrystal_I2C::blink(void)
     - text grows from cursor to the left
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::scrollDisplayLeft(void)
+void scrollDisplayLeft(void)
 {
   send(LCD_INSTRUCTION_WRITE, LCD_CURSOR_DISPLAY_SHIFT | LCD_DISPLAY_SHIFT | LCD_SHIFT_LEFT, LCD_CMD_LENGTH_8BIT);
 }
@@ -333,7 +307,7 @@ void LiquidCrystal_I2C::scrollDisplayLeft(void)
     - text & cursor grows together to the left from cursor position
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::scrollDisplayRight(void)
+void scrollDisplayRight(void)
 {
   send(LCD_INSTRUCTION_WRITE, LCD_CURSOR_DISPLAY_SHIFT | LCD_DISPLAY_SHIFT | LCD_SHIFT_RIGHT, LCD_CMD_LENGTH_8BIT);
 }
@@ -345,7 +319,7 @@ void LiquidCrystal_I2C::scrollDisplayRight(void)
     Sets text direction from left to right
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::leftToRight(void)
+void leftToRight(void)
 {
   _displayMode |= LCD_ENTRY_LEFT;
 
@@ -359,7 +333,7 @@ void LiquidCrystal_I2C::leftToRight(void)
     Sets text direction from right to left
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::rightToLeft(void)
+void rightToLeft(void)
 {
   _displayMode &= ~LCD_ENTRY_LEFT;
 
@@ -378,7 +352,7 @@ void LiquidCrystal_I2C::rightToLeft(void)
       call it the loop, just call it once it setup()
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::autoscroll(void) 
+void autoscroll(void) 
 {
   _displayMode |= LCD_ENTRY_SHIFT_ON;
 
@@ -396,7 +370,7 @@ void LiquidCrystal_I2C::autoscroll(void)
     - whole text on the display stays, cursor shifts when byte written
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::noAutoscroll(void)
+void noAutoscroll(void)
 {
   _displayMode &= ~LCD_ENTRY_SHIFT_ON;
 
@@ -416,7 +390,7 @@ void LiquidCrystal_I2C::noAutoscroll(void)
       & read address 0..3/0..7
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::createChar(uint8_t CGRAM_address, uint8_t *char_pattern)
+void createChar(uint8_t CGRAM_address, uint8_t *char_pattern)
 {
   uint8_t CGRAM_capacity = 0;
   int8_t  font_size      = 0;
@@ -460,7 +434,7 @@ void LiquidCrystal_I2C::createChar(uint8_t CGRAM_address, uint8_t *char_pattern)
 */
 /**************************************************************************/
 #if defined (PROGMEM)
-void LiquidCrystal_I2C::createChar(uint8_t CGRAM_address, const uint8_t *char_pattern)
+void createChar(uint8_t CGRAM_address, const uint8_t *char_pattern)
 {
   uint8_t CGRAM_capacity = 0;
   int8_t  font_size      = 0;
@@ -502,7 +476,7 @@ void LiquidCrystal_I2C::createChar(uint8_t CGRAM_address, const uint8_t *char_pa
       transistor conncted to PCF8574 port
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::noBacklight(void)
+void noBacklight(void)
 {
   switch (_backlightPolarity)
   {
@@ -531,7 +505,7 @@ void LiquidCrystal_I2C::noBacklight(void)
       transistor conncted to PCF8574 port
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::backlight(void)
+void backlight(void)
 {
   switch (_backlightPolarity)
   {
@@ -557,17 +531,9 @@ void LiquidCrystal_I2C::backlight(void)
     to the LCD
 */
 /**************************************************************************/
-#if defined(ARDUINO) && ((ARDUINO) >= 100)
-size_t LiquidCrystal_I2C::write(uint8_t value)
-#else
-void LiquidCrystal_I2C::write(uint8_t value)
-#endif
+void write(uint8_t value)
 {
   send(LCD_DATA_WRITE, value, LCD_CMD_LENGTH_8BIT);
-
-  #if defined(ARDUINO) && ((ARDUINO) >= 100)
-  return 1;
-  #endif
 }
 
 /**************************************************************************/
@@ -583,7 +549,7 @@ void LiquidCrystal_I2C::write(uint8_t value)
       WH1602B/WH1604B datasheet for details.
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::initialization(void)
+void initialization(void)
 {
   uint8_t displayFunction = 0; //don't change!!! default bits value DB7, DB6, DB5, DB4=(DL), DB3=(N), DB2=(F), DB1, DB0
 
@@ -591,7 +557,7 @@ void LiquidCrystal_I2C::initialization(void)
      HD44780 & clones needs ~40ms after voltage rises above 2.7v
      some Arduino boards can start & execute code at 2.4v, so we'll wait 500ms
   */
-  delay(500);
+  HAL_Delay(500);
 
   /*
      FIRST ATTEMPT: set 8-bit mode
@@ -599,7 +565,7 @@ void LiquidCrystal_I2C::initialization(void)
      - for Hitachi & Winstar displays
   */
   send(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_8BIT_MODE, LCD_CMD_LENGTH_4BIT);
-  delay(5);
+  HAL_Delay(5);
 
   /*
      SECOND ATTEMPT: set 8-bit mode
@@ -607,14 +573,14 @@ void LiquidCrystal_I2C::initialization(void)
      - for Hitachi, not needed for Winstar displays
   */
   send(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_8BIT_MODE, LCD_CMD_LENGTH_4BIT);
-  delayMicroseconds(200);
+  HAL_Delay(1);
 	
   /*
      THIRD ATTEMPT: set 8 bit mode
      - used for Hitachi, not needed for Winstar displays
   */
   send(LCD_INSTRUCTION_WRITE, LCD_FUNCTION_SET | LCD_8BIT_MODE, LCD_CMD_LENGTH_4BIT);
-  delayMicroseconds(100);
+  HAL_Delay(1);
 	
   /*
      FINAL ATTEMPT: set 4-bit interface
@@ -664,10 +630,10 @@ void LiquidCrystal_I2C::initialization(void)
     - duration of the En pulse > 450nsec
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::send(uint8_t mode, uint8_t value, uint8_t length)
+void send(uint8_t mode, uint8_t value, uint8_t length)
 {
   uint8_t  halfByte = 0; //lsb or msb
-  uint8_t  data     = 0;
+  uint8_t  data     = 0, dataBuffer[2] = {0};
 
   /* 4-bit or 1-st part of 8-bit command */
   halfByte  = value >> 3;                     //0,0,0,DB7,DB6,DB5,DB4,DB3
@@ -719,7 +685,7 @@ void LiquidCrystal_I2C::send(uint8_t mode, uint8_t value, uint8_t length)
       bitWrite(data, _LCD_TO_PCF8574[i], bitRead(value, i));
 */
 /**************************************************************************/
-uint8_t LiquidCrystal_I2C::portMapping(uint8_t value)
+uint8_t portMapping(uint8_t value)
 {
   uint8_t data = 0;
 
@@ -752,18 +718,18 @@ uint8_t LiquidCrystal_I2C::portMapping(uint8_t value)
       4 - other error
 */
 /**************************************************************************/
-bool LiquidCrystal_I2C::writePCF8574(uint8_t value)
+bool writePCF8574(uint8_t value)
 {
-  Wire.beginTransmission(_PCF8574_address);
-
-  #if defined(ARDUINO) && ((ARDUINO) >= 100)
-  Wire.write(value | _backlightValue);
-  #else
+  /*Wire.beginTransmission(_PCF8574_address);
+	
   Wire.send(value | _backlightValue);
-  #endif
 
   if (Wire.endTransmission(true) == 0) return true;
-                                       return false;
+                                       return false;*/
+  value |= _backlightValue;
+  if( HAL_I2C_Master_Transmit(&hi2c1, _PCF8574_address,(uint8_t *) value, 1, 100) != HAL_OK) return false;
+	
+  return true;
 }
 
 /**************************************************************************/
@@ -782,7 +748,7 @@ bool LiquidCrystal_I2C::writePCF8574(uint8_t value)
       control of PCF8574 I/O.
 */
 /**************************************************************************/
-uint8_t LiquidCrystal_I2C::readPCF8574()
+uint8_t readPCF8574()
 {
   #if defined(_VARIANT_ARDUINO_STM32_)
   Wire.requestFrom(_PCF8574_address, 1);
@@ -816,7 +782,7 @@ uint8_t LiquidCrystal_I2C::readPCF8574()
       - RS,RW,E,DB3,DB2,DB1,DB0,BCK_LED
 */
 /**************************************************************************/
-bool LiquidCrystal_I2C::readBusyFlag()
+bool readBusyFlag()
 {
   send(LCD_BUSY_FLAG_READ, PCF8574_DATA_HIGH, LCD_CMD_LENGTH_4BIT); //set RS=0, RW=1 & input pins to HIGH, see Quasi-Bidirectional I/O
 
@@ -839,7 +805,7 @@ bool LiquidCrystal_I2C::readBusyFlag()
       - RS,RW,E,DB3,DB2,DB1,DB0,BCK_LED
 */
 /**************************************************************************/
-uint8_t LiquidCrystal_I2C::getCursorPosition()
+uint8_t getCursorPosition()
 {
   uint8_t data     = 0;
   uint8_t position = 0;
@@ -875,7 +841,7 @@ uint8_t LiquidCrystal_I2C::getCursorPosition()
     Prints horizontal graph
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::printHorizontalGraph(char name, uint8_t row, uint16_t currentValue, uint16_t maxValue)
+void printHorizontalGraph(char name, uint8_t row, uint16_t currentValue, uint16_t maxValue)
 {
   uint8_t currentGraph = 0;
   uint8_t colum        = 0;
@@ -911,7 +877,7 @@ void LiquidCrystal_I2C::printHorizontalGraph(char name, uint8_t row, uint16_t cu
     - text remains in DDRAM
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::displayOff(void)
+void displayOff(void)
 {
   noBacklight();
   noDisplay();
@@ -924,7 +890,7 @@ void LiquidCrystal_I2C::displayOff(void)
     Turns on backlight via PCF8574 & shows text from DDRAM
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::displayOn(void)
+void displayOn(void)
 {
   display();
   backlight();
@@ -942,11 +908,11 @@ void LiquidCrystal_I2C::displayOn(void)
                  min. value = 0,  max. value = 255 (0.0v .. 4.5v)  
 */
 /**************************************************************************/
-void LiquidCrystal_I2C::setBrightness(uint8_t pin, uint8_t value, backlightPolarity polarity)
+/*void setBrightness(uint8_t pin, uint8_t value, backlightPolarity polarity)
 {
   pinMode(pin, OUTPUT);
 
   if (polarity == NEGATIVE) value = 255 - value;
 
   analogWrite(pin, value);
-}
+}*/
