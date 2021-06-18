@@ -164,7 +164,7 @@ void home(void)
 {
   send(LCD_INSTRUCTION_WRITE, LCD_RETURN_HOME, LCD_CMD_LENGTH_8BIT);
 
-  delay(LCD_HOME_CLEAR_DELAY);
+  HAL_Delay(LCD_HOME_CLEAR_DELAY);
 }
 
 /**************************************************************************/
@@ -555,9 +555,8 @@ void initialization(void)
 
   /*
      HD44780 & clones needs ~40ms after voltage rises above 2.7v
-     some Arduino boards can start & execute code at 2.4v, so we'll wait 500ms
   */
-  HAL_Delay(500);
+  HAL_Delay(45);
 
   /*
      FIRST ATTEMPT: set 8-bit mode
@@ -644,7 +643,8 @@ void send(uint8_t mode, uint8_t value, uint8_t length)
                                               //En pulse duration > 450nsec
   bitClear(data, _LCD_TO_PCF8574[5]);         //RS,RW,E=0,DB7,DB6,DB5,DB4,BCK_LED=0
   writePCF8574(data);                         //execute command
-  delayMicroseconds(LCD_COMMAND_DELAY);       //command duration
+  //delayMicroseconds(LCD_COMMAND_DELAY);       //command duration
+  HAL_Delay(1);
 
   /* second part of 8-bit command */
   if (length == LCD_CMD_LENGTH_8BIT)
@@ -657,7 +657,8 @@ void send(uint8_t mode, uint8_t value, uint8_t length)
                                               //En pulse duration > 450nsec
     bitClear(data, _LCD_TO_PCF8574[5]);       //RS,RW,E=0,DB3,DB2,DB1,DB0,BCK_LED=0
     writePCF8574(data);                       //execute command
-    delayMicroseconds(LCD_COMMAND_DELAY);     //command duration
+    //delayMicroseconds(LCD_COMMAND_DELAY);     //command duration
+    HAL_Delay(1);
   }
 }
 
@@ -727,7 +728,7 @@ bool writePCF8574(uint8_t value)
   if (Wire.endTransmission(true) == 0) return true;
                                        return false;*/
   value |= _backlightValue;
-  if( HAL_I2C_Master_Transmit(&hi2c1, _PCF8574_address,(uint8_t *) value, 1, 100) != HAL_OK) return false;
+  if( HAL_I2C_Master_Transmit(&hi2c1, _PCF8574_address,(uint8_t *) &value, 1, 100) != HAL_OK) return false;
 	
   return true;
 }
@@ -750,19 +751,11 @@ bool writePCF8574(uint8_t value)
 /**************************************************************************/
 uint8_t readPCF8574()
 {
-  #if defined(_VARIANT_ARDUINO_STM32_)
-  Wire.requestFrom(_PCF8574_address, 1);
-  #else
-  Wire.requestFrom(_PCF8574_address, 1, true); //true, stop message after transmission & releas I2C bus
-  #endif
-  if (Wire.available() != 1) return false;     //check "wire.h" rxBuffer & error handler, collision on the i2c bus
-
-  /* reads byte from "wire.h" rxBuffer */
-  #if defined(ARDUINO) && ((ARDUINO) >= 100)
-  return Wire.read();
-  #else
-  return Wire.receive();
-  #endif
+  uint8_t l_Data = 0;
+	
+  if(HAL_I2C_Master_Receive(&hi2c1, _PCF8574_address,(uint8_t *) &l_Data, 1, 100) != HAL_OK) return false;
+	
+  return l_Data;
 }
 
 /**************************************************************************/
