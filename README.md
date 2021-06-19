@@ -1,8 +1,7 @@
-[![license-badge][]][license] ![version] [![stars][]][stargazers] ![hit-count] [![github-issues][]][issues]
 
 # LiquidCrystal_I2C
 
-This is fast Arduino library for LCD HD44780 and its clones (S6A0069, KS0066U, NT3881D, LC7985, ST7066, SPLC780, WH160xB, AIP31066, GDM200xD). It works in 4-bit mode via I²C bus with 8-bit PCF8574/PCF8574A I/O expander.
+This is a library for LCD HD44780 and its clones (S6A0069, KS0066U, NT3881D, LC7985, ST7066, SPLC780, WH160xB, AIP31066, GDM200xD). It works in 4-bit mode via I²C bus with 8-bit PCF8574/PCF8574A I/O expander.
 
 The 99.9% of all PCF8574 I²C backpacks from eBay connected like this:
 
@@ -40,17 +39,5 @@ LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 13, 5, 6, 16, 11, 12, 4, 14, POS
 ```
 
 Supports:
+- Arduino STM32 (HAL)
 
-- Arduino AVR
-- Arduino ESP8266
-- Arduino ESP32
-- Arduino STM32
-
-[license-badge]: https://img.shields.io/badge/License-GPLv3-blue.svg
-[license]:       https://choosealicense.com/licenses/gpl-3.0/
-[version]:       https://img.shields.io/badge/Version-1.2.4-green.svg
-[stars]:         https://img.shields.io/github/stars/enjoyneering/LiquidCrystal_I2C.svg
-[stargazers]:    https://github.com/enjoyneering/LiquidCrystal_I2C/stargazers
-[hit-count]:     https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fenjoyneering%2FLiquidCrystal_I2C&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false
-[github-issues]: https://img.shields.io/github/issues/enjoyneering/LiquidCrystal_I2C.svg
-[issues]:        https://github.com/enjoyneering/LiquidCrystal_I2C/issues/
